@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Color Palette Generator</h1>
+        <p class="subtitle">Create beautiful color palettes from images or randomly</p>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="random">Random Palette</button>
+            <button class="tab-btn" data-tab="image">Extract from Image</button>
+        </div>
+        
+        <div id="random-tab" class="tab-content active">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Palette Type</label>
+                    <select id="paletteType">
+                        <option value="random">Random Colors</option>
+                        <option value="analogous">Analogous</option>
+                        <option value="complementary">Complementary</option>
+                        <option value="triadic">Triadic</option>
+                        <option value="monochromatic">Monochromatic</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Number of Colors: <span id="colorCountValue">5</span></label>
+                    <input type="range" id="colorCount" min="3" max="10" value="5">
+                </div>
+                <button id="generateBtn" class="btn btn-primary">🎲 Generate New Palette</button>
+            </div>
+            
+            <div class="palette-display" id="paletteDisplay"></div>
+        </div>
+        
+        <div id="image-tab" class="tab-content">
+            <div class="image-upload">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <div class="drop-zone" id="dropZone">
+                    <p>📁 Drop an image here or click to upload</p>
+                    <p class="hint">Supports JPG, PNG, WebP, GIF</p>
+                </div>
+                <img id="previewImage" alt="Preview" style="display: none;">
+            </div>
+            <div class="palette-display" id="imagePaletteDisplay">
+                <p class="empty-state">Upload an image to extract its colors</p>
+            </div>
+        </div>
+        
+        <div class="palette-actions">
+            <button id="saveBtn" class="btn btn-secondary">💾 Save Palette</button>
+            <button id="exportBtn" class="btn btn-secondary">📋 Export CSS</button>
+        </div>
+        
+        <div class="saved-palettes" id="savedPalettes">
+            <h3>💾 Saved Palettes</h3>
+            <div class="saved-grid" id="savedGrid"></div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
