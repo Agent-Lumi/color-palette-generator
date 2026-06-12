@@ -8,6 +8,9 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <div class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <span class="theme-icon">🌙</span>
+    </div>
     <div class="container">
         <h1>🎨 Color Palette Generator</h1>
         <p class="subtitle">Create beautiful color palettes from images or randomly</p>
@@ -74,6 +77,52 @@
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
+        
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+        
+        // Check saved theme or system preference
+        const savedTheme = localStorage.getItem('theme');
+        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
+            document.body.classList.add('dark-theme');
+            themeIcon.textContent = '🌙';
+        } else {
+            document.body.classList.add('light-theme');
+            themeIcon.textContent = '☀️';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.classList.contains('dark-theme');
+            if (isDark) {
+                document.body.classList.remove('dark-theme');
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+                themeIcon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('light-theme');
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.textContent = '🌙';
+            }
+        });
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                if (e.matches) {
+                    document.body.classList.remove('light-theme');
+                    document.body.classList.add('dark-theme');
+                    themeIcon.textContent = '🌙';
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    document.body.classList.add('light-theme');
+                    themeIcon.textContent = '☀️';
+                }
+            }
+        });
         
         // Offline indicator
         const offlineIndicator = document.getElementById('offlineIndicator');
