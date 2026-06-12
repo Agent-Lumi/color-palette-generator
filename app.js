@@ -19,14 +19,98 @@ class ColorPaletteGenerator {
         this.currentPalette = [];
         this.savedPalettes = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
         
+        // Color History for Undo/Redo
+        this.paletteHistory = JSON.parse(localStorage.getItem('paletteHistory') || '[]');
+        this.historyIndex = -1;
+        this.maxHistory = 20;
+        
         this.init();
     }
     
     init() {
         this.addEventListeners();
         this.renderSavedPalettes();
-        this.generatePalette();
         this.setupTabs();
+        this.setupKeyboardShortcuts();
+        
+        // Load from history or generate new
+        if (this.paletteHistory.length > 0) {
+            this.historyIndex = this.paletteHistory.length - 1;
+            this.currentPalette = [...this.paletteHistory[this.historyIndex]];
+            this.renderPalette(this.paletteDisplay, this.currentPalette);
+        } else {
+            this.generatePalette();
+        }
+    }
+    
+    // Save current palette to history
+    addToHistory(palette) {
+        // Remove any future history if we're not at the end
+        if (this.historyIndex < this.paletteHistory.length - 1) {
+            this.paletteHistory = this.paletteHistory.slice(0, this.historyIndex + 1);
+        }
+        
+        // Add new state
+        this.paletteHistory.push([...palette]);
+        
+        // Trim to max size
+        if (this.paletteHistory.length > this.maxHistory) {
+            this.paletteHistory.shift();
+        } else {
+            this.historyIndex++;
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('paletteHistory', JSON.stringify(this.paletteHistory));
+        this.updateHistoryButtons();
+    }
+    
+    undo() {
+        if (this.historyIndex > 0) {
+            this.historyIndex--;
+            this.currentPalette = [...this.paletteHistory[this.historyIndex]];
+            this.renderPalette(this.paletteDisplay, this.currentPalette);
+            this.updateHistoryButtons();
+            this.showToast('↩️ Undone');
+        }
+    }
+    
+    redo() {
+        if (this.historyIndex < this.paletteHistory.length - 1) {
+            this.historyIndex++;
+            this.currentPalette = [...this.paletteHistory[this.historyIndex]];
+            this.renderPalette(this.paletteDisplay, this.currentPalette);
+            this.updateHistoryButtons();
+            this.showToast('↪️ Redone');
+        }
+    }
+    
+    updateHistoryButtons() {
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        if (undoBtn) {
+            undoBtn.disabled = this.historyIndex <= 0;
+            undoBtn.style.opacity = this.historyIndex <= 0 ? '0.5' : '1';
+        }
+        if (redoBtn) {
+            redoBtn.disabled = this.historyIndex >= this.paletteHistory.length - 1;
+            redoBtn.style.opacity = this.historyIndex >= this.paletteHistory.length - 1 ? '0.5' : '1';
+        }
+    }
+    
+    setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Z for undo
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                this.undo();
+            }
+            // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y for redo
+            if ((e.ctrlKey || e.metaKey) && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
+                e.preventDefault();
+                this.redo();
+            }
+        });
     }
     
     setupTabs() {
@@ -50,6 +134,12 @@ class ColorPaletteGenerator {
         this.colorCount.addEventListener('input', () => {
             this.colorCountValue.textContent = this.colorCount.value;
         });
+        
+        // Undo/Redo buttons
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        if (undoBtn) undoBtn.addEventListener('click', () => this.undo());
+        if (redoBtn) redoBtn.addEventListener('click', () => this.redo());
         
         this.saveBtn.addEventListener('click', () => this.savePalette());
         this.exportBtn.addEventListener('click', () => this.showExportModal());
@@ -181,6 +271,7 @@ class ColorPaletteGenerator {
         }
         
         this.renderPalette(this.paletteDisplay, this.currentPalette);
+        this.addToHistory(this.currentPalette);
     }
     
     renderPalette(container, colors) {
@@ -259,6 +350,7 @@ class ColorPaletteGenerator {
         
         this.currentPalette = sortedColors;
         this.renderPalette(this.imagePaletteDisplay, this.currentPalette);
+        this.addToHistory(this.currentPalette);
     }
     
     savePalette() {

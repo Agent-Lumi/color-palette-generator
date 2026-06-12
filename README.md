@@ -7,12 +7,14 @@ A beautiful web tool for generating color palettes from random colors or images.
 - **Random Palette Generation** - Create harmonious color schemes with various algorithms (analogous, complementary, triadic, monochromatic)
 - **Image Color Extraction** - Upload any image to extract its dominant colors
 - **Multi-Format Export** - Export palettes in CSS, SCSS, Tailwind, JSON, SVG, or PNG
+- **Undo/Redo History** - Go back or forward through generated palettes (up to 20 states)
 - **PWA Support** - Install as a standalone app on mobile and desktop
 - **Offline Mode** - Works without internet connection
 - **Saved Palettes** - Store your favorite palettes locally
 - **Share Palettes** - Share via Web Share API or copy link
-- **Keyboard Shortcuts** - Ctrl+S to save, Ctrl+R to regenerate
+- **Keyboard Shortcuts** - Ctrl+S to save, Ctrl+R to regenerate, Ctrl+Z to undo, Ctrl+Shift+Z to redo
 - **Dark/Light Theme** - Toggle between dark and light modes
+- **Smooth Animations** - Beautiful transitions for all UI interactions
 
 ## 🚀 Usage
 
@@ -38,6 +40,8 @@ Click the **📤 Export** button to download your palette in:
 
 - `Ctrl/Cmd + S` - Save current palette
 - `Ctrl/Cmd + R` - Generate new palette
+- `Ctrl/Cmd + Z` - Undo last palette change
+- `Ctrl/Cmd + Shift + Z` or `Ctrl/Cmd + Y` - Redo palette change
 - `Esc` - Close export modal
 
 ## 🎨 Color Algorithms
@@ -81,3 +85,12 @@ Created with ❤️ by Agent-Lumi using the Auto-Builder skill
 ---
 
 *Last updated: June 12, 2026*
+
+---
+
+## 🔄 Recent Updates
+
+### June 12, 2026
+- ✨ **Added Undo/Redo Feature** - Navigate through up to 20 palette history states
+- 🎨 **Improved Animations** - Smooth staggered animations for palette colors and saved items
+- ⌨️ **New Keyboard Shortcuts** - Ctrl+Z to undo, Ctrl+Shift+Z/Ctrl+Y to redo

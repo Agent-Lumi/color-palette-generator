@@ -205,6 +205,17 @@ input[type="range"]::-webkit-slider-thumb {
     box-shadow: 0 5px 20px rgba(255, 107, 107, 0.4);
 }
 
+.btn:disabled {
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 .palette-display {
     display: flex;
     gap: 0;
@@ -295,32 +306,78 @@ input[type="range"]::-webkit-slider-thumb {
     gap: 10px;
     justify-content: center;
     margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
-.saved-palettes {
-    background: var(--bg-tertiary);
-    border-radius: 12px;
-    padding: 25px;
+/* History buttons */
+#undoBtn, #redoBtn {
+    min-width: 80px;
 }
 
-.saved-palettes h3 {
-    margin-bottom: 15px;
-    color: var(--text-primary);
+#undoBtn:disabled, #redoBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.saved-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
+/* Stagger animation for palette colors */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
+.palette-color {
+    animation: fadeInScale 0.3s ease backwards;
+}
+
+.palette-color:nth-child(1) { animation-delay: 0ms; }
+.palette-color:nth-child(2) { animation-delay: 50ms; }
+.palette-color:nth-child(3) { animation-delay: 100ms; }
+.palette-color:nth-child(4) { animation-delay: 150ms; }
+.palette-color:nth-child(5) { animation-delay: 200ms; }
+.palette-color:nth-child(6) { animation-delay: 250ms; }
+.palette-color:nth-child(7) { animation-delay: 300ms; }
+.palette-color:nth-child(8) { animation-delay: 350ms; }
+.palette-color:nth-child(9) { animation-delay: 400ms; }
+.palette-color:nth-child(10) { animation-delay: 450ms; }
+
+/* Toast animation improvements */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.toast {
+    animation: slideUp 0.3s ease;
+}
+
+/* Saved item animations */
 .saved-item {
     background: var(--bg-tertiary);
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    animation: fadeInScale 0.4s ease backwards;
 }
+
+.saved-item:nth-child(1) { animation-delay: 0ms; }
+.saved-item:nth-child(2) { animation-delay: 50ms; }
+.saved-item:nth-child(3) { animation-delay: 100ms; }
+.saved-item:nth-child(4) { animation-delay: 150ms; }
+.saved-item:nth-child(5) { animation-delay: 200ms; }
+.saved-item:nth-child(6) { animation-delay: 250ms; }
 
 .saved-item:hover {
     transform: translateY(-2px);
@@ -340,6 +397,23 @@ input[type="range"]::-webkit-slider-thumb {
     padding: 10px;
     font-size: 0.8rem;
     color: var(--text-secondary);
+}
+
+.saved-palettes {
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    padding: 25px;
+}
+
+.saved-palettes h3 {
+    margin-bottom: 15px;
+    color: var(--text-primary);
+}
+
+.saved-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
 }
 
 .toast {
@@ -526,5 +600,14 @@ input[type="range"]::-webkit-slider-thumb {
     
     .saved-grid {
         grid-template-columns: 1fr;
+    }
+    
+    .palette-actions {
+        flex-wrap: wrap;
+    }
+    
+    .btn-secondary {
+        padding: 10px 16px;
+        font-size: 0.9rem;
     }
 }
