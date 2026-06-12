@@ -52,7 +52,7 @@ class ColorPaletteGenerator {
         });
         
         this.saveBtn.addEventListener('click', () => this.savePalette());
-        this.exportBtn.addEventListener('click', () => this.exportPalette());
+        this.exportBtn.addEventListener('click', () => this.showExportModal());
         this.shareBtn?.addEventListener('click', () => this.sharePalette());
         
         this.dropZone.addEventListener('click', () => this.imageInput.click());
@@ -307,13 +307,196 @@ class ColorPaletteGenerator {
         });
     }
     
-    exportPalette() {
+    showExportModal() {
         if (this.currentPalette.length === 0) return;
         
-        const css = `:root {\n${this.currentPalette.map((c, i) => `  --color-${i + 1}: ${c};`).join('\n')}\n}`;
+        // Remove existing modal
+        const existingModal = document.getElementById('exportModal');
+        if (existingModal) existingModal.remove();
         
-        navigator.clipboard.writeText(css);
-        this.showToast('CSS variables copied to clipboard!');
+        const modal = document.createElement('div');
+        modal.id = 'exportModal';
+        modal.className = 'export-modal';
+        modal.innerHTML = `
+            <div class="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📤 Export Palette</h3>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="export-options">
+                        <button class="export-option" data-format="css">
+                            <span class="option-icon">🎨</span>
+                            <span class="option-label">CSS Variables</span>
+                            <span class="option-desc">:root { --color-1: #xxx }</span>
+                        </button>
+                        <button class="export-option" data-format="scss">
+                            <span class="option-icon">💅</span>
+                            <span class="option-label">SCSS Variables</span>
+                            <span class="option-desc">$color-1: #xxx;</span>
+                        </button>
+                        <button class="export-option" data-format="tailwind">
+                            <span class="option-icon">🌊</span>
+                            <span class="option-label">Tailwind Config</span>
+                            <span class="option-desc">colors: { primary: '#xxx' }</span>
+                        </button>
+                        <button class="export-option" data-format="json">
+                            <span class="option-icon">📋</span>
+                            <span class="option-label">JSON Array</span>
+                            <span class="option-desc">["#xxx", "#xxx", ...]</span>
+                        </button>
+                        <button class="export-option" data-format="svg">
+                            <span class="option-icon">🖼️</span>
+                            <span class="option-label">SVG Swatch</span>
+                            <span class="option-desc">Export as SVG image</span>
+                        </button>
+                        <button class="export-option" data-format="png">
+                            <span class="option-icon">📷</span>
+                            <span class="option-label">PNG Image</span>
+                            <span class="option-desc">Download palette as PNG</span>
+                        </button>
+                    </div>
+                    <div class="export-preview" id="exportPreview"></div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
+        
+        // Close on backdrop click
+        modal.querySelector('.modal-backdrop').addEventListener('click', () => this.closeExportModal());
+        modal.querySelector('#closeModal').addEventListener('click', () => this.closeExportModal());
+        
+        // Export options
+        modal.querySelectorAll('.export-option').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const format = btn.dataset.format;
+                this.exportToFormat(format);
+            });
+        });
+        
+        // Escape to close
+        const escapeHandler = (e) => {
+            if (e.key === 'Escape') {
+                this.closeExportModal();
+                document.removeEventListener('keydown', escapeHandler);
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+    }
+    
+    closeExportModal() {
+        const modal = document.getElementById('exportModal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => modal.remove(), 300);
+        }
+    }
+    
+    exportToFormat(format) {
+        const palette = this.currentPalette;
+        let content, filename, mimeType;
+        
+        switch(format) {
+            case 'css':
+                content = `/* Color Palette Generated on ${new Date().toLocaleDateString()} */\n:root {\n${palette.map((c, i) => `  --color-${i + 1}: ${c};`).join('\n')}\n}`;
+                filename = 'palette.css';
+                mimeType = 'text/css';
+                break;
+                
+            case 'scss':
+                content = `// Color Palette Generated on ${new Date().toLocaleDateString()}\n${palette.map((c, i) => `$color-${i + 1}: ${c};`).join('\n')}\n`;
+                filename = 'palette.scss';
+                mimeType = 'text/scss';
+                break;
+                
+            case 'tailwind':
+                const names = ['primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info', 'neutral'];
+                const config = palette.map((c, i) => `    ${names[i] || `color${i + 1}`}: '${c}'`).join(',\n');
+                content = `// tailwind.config.js\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n${config}\n      }\n    }\n  }\n}`;
+                filename = 'tailwind.config.js';
+                mimeType = 'application/javascript';
+                break;
+                
+            case 'json':
+                content = JSON.stringify({
+                    name: 'Generated Palette',
+                    created: new Date().toISOString(),
+                    colors: palette
+                }, null, 2);
+                filename = 'palette.json';
+                mimeType = 'application/json';
+                break;
+                
+            case 'svg':
+                const svgColors = palette.map((c, i) => 
+                    `<rect x="${i * 100}" y="0" width="100" height="100" fill="${c}" />`
+                ).join('');
+                content = `<?xml version="1.0" encoding="UTF-8"?>\n<svg width="${palette.length * 100}" height="100" xmlns="http://www.w3.org/2000/svg">\n${svgColors}\n</svg>`;
+                filename = 'palette.svg';
+                mimeType = 'image/svg+xml';
+                break;
+                
+            case 'png':
+                this.exportPNG(palette);
+                this.closeExportModal();
+                this.showToast('PNG downloading...');
+                return;
+                
+            default:
+                return;
+        }
+        
+        // Create download
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        this.closeExportModal();
+        this.showToast(`${format.toUpperCase()} exported!`);
+    }
+    
+    exportPNG(palette) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = palette.length * 200;
+        const height = 200;
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw color swatches
+        palette.forEach((color, i) => {
+            ctx.fillStyle = color;
+            ctx.fillRect(i * 200, 0, 200, height);
+            
+            // Draw hex label
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(color.toUpperCase(), i * 200 + 100, height / 2);
+        });
+        
+        // Download
+        const link = document.createElement('a');
+        link.download = 'palette.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+    
+    exportPalette() {
+        // Legacy method, now replaced by modal
+        this.showExportModal();
     }
     
     sharePalette() {
