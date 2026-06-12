@@ -299,6 +299,19 @@ input[type="range"]::-webkit-slider-thumb {
     opacity: 1;
 }
 
+.offline-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #ff6b6b;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    z-index: 9999;
+    font-weight: 500;
+}
+
 @media (max-width: 600px) {
     h1 {
         font-size: 1.8rem;

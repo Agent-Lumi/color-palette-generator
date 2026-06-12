@@ -8,6 +8,7 @@ class ColorPaletteGenerator {
         this.colorCountValue = document.getElementById('colorCountValue');
         this.saveBtn = document.getElementById('saveBtn');
         this.exportBtn = document.getElementById('exportBtn');
+        this.shareBtn = document.getElementById('shareBtn');
         this.savedGrid = document.getElementById('savedGrid');
         this.dropZone = document.getElementById('dropZone');
         this.imageInput = document.getElementById('imageInput');
@@ -52,6 +53,7 @@ class ColorPaletteGenerator {
         
         this.saveBtn.addEventListener('click', () => this.savePalette());
         this.exportBtn.addEventListener('click', () => this.exportPalette());
+        this.shareBtn?.addEventListener('click', () => this.sharePalette());
         
         this.dropZone.addEventListener('click', () => this.imageInput.click());
         this.imageInput.addEventListener('change', (e) => this.handleImageUpload(e));
@@ -312,6 +314,27 @@ class ColorPaletteGenerator {
         
         navigator.clipboard.writeText(css);
         this.showToast('CSS variables copied to clipboard!');
+    }
+    
+    sharePalette() {
+        if (this.currentPalette.length === 0) return;
+        
+        const paletteText = `Color Palette: ${this.currentPalette.join(', ')}`;
+        
+        if (navigator.share) {
+            navigator.share({
+                title: 'Color Palette',
+                text: paletteText,
+                url: window.location.href
+            }).catch(() => {
+                // Fallback to clipboard
+                navigator.clipboard.writeText(window.location.href);
+                this.showToast('Link copied to clipboard!');
+            });
+        } else {
+            navigator.clipboard.writeText(window.location.href);
+            this.showToast('Link copied to clipboard!');
+        }
     }
 }
 
