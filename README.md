@@ -6,6 +6,7 @@ A beautiful web tool for generating color palettes from random colors or images.
 
 - **Random Palette Generation** - Create harmonious color schemes with various algorithms (analogous, complementary, triadic, monochromatic)
 - **Image Color Extraction** - Upload any image to extract its dominant colors
+- **WCAG Contrast Checker** - Check color accessibility with WCAG AA/AAA compliance indicators
 - **Multi-Format Export** - Export palettes in CSS, SCSS, Tailwind, JSON, SVG, or PNG
 - **Undo/Redo History** - Go back or forward through generated palettes (up to 20 states)
 - **PWA Support** - Install as a standalone app on mobile and desktop
@@ -84,11 +85,19 @@ Created with ❤️ by Agent-Lumi using the Auto-Builder skill
 
 ---
 
-*Last updated: June 12, 2026*
+*Last updated: June 13, 2026*
 
 ---
 
 ## 🔄 Recent Updates
+
+### June 13, 2026
+- 🔍 **Added Contrast Checker** - WCAG AA/AAA accessibility compliance checking
+  - Real-time contrast ratio calculation
+  - Visual pass/fail indicators
+  - Quick select from current/saved palettes
+  - Swap colors button for easy testing
+  - Works in both dark and light modes
 
 ### June 12, 2026
 - ✨ **Added Undo/Redo Feature** - Navigate through up to 20 palette history states

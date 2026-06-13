@@ -32,6 +32,7 @@ class ColorPaletteGenerator {
         this.renderSavedPalettes();
         this.setupTabs();
         this.setupKeyboardShortcuts();
+        this.initContrastChecker();
         
         // Load from history or generate new
         if (this.paletteHistory.length > 0) {
@@ -610,6 +611,197 @@ class ColorPaletteGenerator {
             navigator.clipboard.writeText(window.location.href);
             this.showToast('Link copied to clipboard!');
         }
+    }
+    
+    // Contrast Checker Methods
+    initContrastChecker() {
+        this.contrastFgPicker = document.getElementById('contrastFgPicker');
+        this.contrastBgPicker = document.getElementById('contrastBgPicker');
+        this.contrastFgHex = document.getElementById('contrastFgHex');
+        this.contrastBgHex = document.getElementById('contrastBgHex');
+        this.contrastSwap = document.getElementById('contrastSwap');
+        this.contrastPreview = document.getElementById('contrastPreview');
+        this.previewText = document.getElementById('previewText');
+        this.ratioValue = document.getElementById('ratioValue');
+        this.wcagAA = document.getElementById('wcagAA');
+        this.wcagAAA = document.getElementById('wcagAAA');
+        this.wcagAALarge = document.getElementById('wcagAALarge');
+        this.quickColors = document.getElementById('quickColors');
+        
+        if (!this.contrastFgPicker) return;
+        
+        // Event listeners
+        this.contrastFgPicker.addEventListener('input', (e) => {
+            this.contrastFgHex.value = e.target.value;
+            this.updateContrastPreview();
+        });
+        
+        this.contrastBgPicker.addEventListener('input', (e) => {
+            this.contrastBgHex.value = e.target.value;
+            this.updateContrastPreview();
+        });
+        
+        this.contrastFgHex.addEventListener('change', (e) => {
+            const hex = this.validateHex(e.target.value);
+            if (hex) {
+                this.contrastFgPicker.value = hex;
+                this.contrastFgHex.value = hex;
+                this.updateContrastPreview();
+            }
+        });
+        
+        this.contrastBgHex.addEventListener('change', (e) => {
+            const hex = this.validateHex(e.target.value);
+            if (hex) {
+                this.contrastBgPicker.value = hex;
+                this.contrastBgHex.value = hex;
+                this.updateContrastPreview();
+            }
+        });
+        
+        this.contrastSwap.addEventListener('click', () => {
+            const tempFg = this.contrastFgPicker.value;
+            const tempFgHex = this.contrastFgHex.value;
+            
+            this.contrastFgPicker.value = this.contrastBgPicker.value;
+            this.contrastFgHex.value = this.contrastBgHex.value;
+            
+            this.contrastBgPicker.value = tempFg;
+            this.contrastBgHex.value = tempFgHex;
+            
+            this.updateContrastPreview();
+            this.showToast('Colors swapped!');
+        });
+        
+        // Listen for tab changes to update quick colors
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.tab === 'contrast') {
+                    this.updateQuickColors();
+                }
+            });
+        });
+        
+        // Initial update
+        this.updateContrastPreview();
+    }
+    
+    updateQuickColors() {
+        if (!this.quickColors) return;
+        
+        this.quickColors.innerHTML = '';
+        
+        // Add colors from current palette
+        const colors = [...this.currentPalette];
+        
+        // Add saved palette colors
+        this.savedPalettes.forEach(palette => {
+            colors.push(...palette.colors);
+        });
+        
+        // Remove duplicates and limit
+        const uniqueColors = [...new Set(colors)].slice(0, 16);
+        
+        if (uniqueColors.length === 0) {
+            this.quickColors.innerHTML = '<p class="empty-state">Generate or save a palette to see quick colors</p>';
+            return;
+        }
+        
+        uniqueColors.forEach(color => {
+            const btn = document.createElement('button');
+            btn.className = 'quick-color-btn';
+            btn.style.backgroundColor = color;
+            btn.title = `Use ${color}`;
+            
+            // Right click to set background, left click to set foreground
+            btn.addEventListener('click', () => {
+                this.contrastFgPicker.value = color;
+                this.contrastFgHex.value = color;
+                this.updateContrastPreview();
+                this.showToast(`Foreground set to ${color.toUpperCase()}`);
+            });
+            
+            btn.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.contrastBgPicker.value = color;
+                this.contrastBgHex.value = color;
+                this.updateContrastPreview();
+                this.showToast(`Background set to ${color.toUpperCase()}`);
+            });
+            
+            this.quickColors.appendChild(btn);
+        });
+    }
+    
+    updateContrastPreview() {
+        if (!this.contrastPreview) return;
+        
+        const fgColor = this.contrastFgPicker.value;
+        const bgColor = this.contrastBgPicker.value;
+        
+        this.contrastPreview.style.backgroundColor = bgColor;
+        this.previewText.style.color = fgColor;
+        
+        // Calculate contrast ratio
+        const ratio = this.calculateContrastRatio(fgColor, bgColor);
+        this.ratioValue.textContent = ratio + ':1';
+        
+        // WCAG levels
+        const aa = ratio >= 4.5;
+        const aaa = ratio >= 7;
+        const aaLarge = ratio >= 3;
+        
+        this.updateWcagStatus(this.wcagAA, aa);
+        this.updateWcagStatus(this.wcagAAA, aaa);
+        this.updateWcagStatus(this.wcagAALarge, aaLarge);
+    }
+    
+    updateWcagStatus(element, pass) {
+        if (!element) return;
+        
+        element.classList.remove('pass', 'fail');
+        element.classList.add(pass ? 'pass' : 'fail');
+        
+        const statusSpan = element.querySelector('.level-status');
+        if (statusSpan) {
+            statusSpan.textContent = pass ? '✓ Pass' : '✗ Fail';
+        }
+    }
+    
+    calculateContrastRatio(fg, bg) {
+        const fgLuminance = this.getLuminance(fg);
+        const bgLuminance = this.getLuminance(bg);
+        
+        const lighter = Math.max(fgLuminance, bgLuminance);
+        const darker = Math.min(fgLuminance, bgLuminance);
+        
+        const ratio = (lighter + 0.05) / (darker + 0.05);
+        return ratio.toFixed(2);
+    }
+    
+    getLuminance(hex) {
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+        
+        const [lr, lg, lb] = [r, g, b].map(c => {
+            if (c <= 0.03928) return c / 12.92;
+            return Math.pow((c + 0.055) / 1.055, 2.4);
+        });
+        
+        return 0.2126 * lr + 0.7152 * lg + 0.0722 * lb;
+    }
+    
+    validateHex(hex) {
+        hex = hex.trim();
+        if (!hex.startsWith('#')) {
+            hex = '#' + hex;
+        }
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            return hex.toLowerCase();
+        }
+        return null;
     }
 }
 
