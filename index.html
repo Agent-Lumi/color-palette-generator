@@ -6,6 +6,144 @@
     <title>Color Palette Generator</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
+    <style>
+        /* Tutorial Styles */
+        .tour-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tour-popup {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: tourSlideIn 0.4s ease-out;
+        }
+        
+        @keyframes tourSlideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tour-popup h3 {
+            margin-top: 0;
+            color: #6c5ce7;
+            font-size: 1.5rem;
+        }
+        
+        .tour-popup p {
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .tour-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        .tour-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .tour-btn-primary {
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: white;
+        }
+        
+        .tour-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.4);
+        }
+        
+        .tour-btn-secondary {
+            background: #f0f0f0;
+            color: #555;
+        }
+        
+        .tour-btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .tour-progress {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .tour-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: background 0.3s;
+        }
+        
+        .tour-dot.active {
+            background: #6c5ce7;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        .help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #fdcb6e, #e17055);
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(253, 203, 110, 0.4);
+            transition: all 0.3s;
+            z-index: 999;
+        }
+        
+        .help-btn:hover {
+            transform: scale(1.1) rotate(10deg);
+        }
+        
+        /* Dark theme support for tutorial */
+        .dark-theme .tour-popup {
+            background: #2d3436;
+            color: #dfe6e9;
+        }
+        
+        .dark-theme .tour-popup h3 {
+            color: #a29bfe;
+        }
+        
+        .dark-theme .tour-popup p {
+            color: #b2bec3;
+        }
+        
+        .dark-theme .tour-btn-secondary {
+            background: #636e72;
+            color: #dfe6e9;
+        }
+        
+        .dark-theme .tour-btn-secondary:hover {
+            background: #74b9ff;
+        }
+    </style>
 </head>
 <body>
     <div class="theme-toggle" id="themeToggle" title="Toggle theme">
@@ -129,6 +267,9 @@
     <!-- Offline Indicator -->
     <div id="offlineIndicator" class="offline-indicator" style="display: none;">⚠️ Offline</div>
     
+    <!-- Help Button -->
+    <button class="help-btn" id="helpBtn" title="Show Tutorial">❓</button>
+    
     <script src="app.js"></script>
     <script>
         // Register Service Worker
@@ -202,90 +343,145 @@
                 }
             }
         });
+        
+        // ===== INTERACTIVE TUTORIAL =====
+        const tourSteps = [
+            {
+                title: '🎨 Welcome to Color Palette Generator!',
+                content: 'Let me show you around this powerful tool for creating beautiful color palettes.',
+                highlight: null
+            },
+            {
+                title: '🎲 Generate Palettes',
+                content: 'Use the "Generate New Palette" button to create random colors, or select different harmony types like Analogous, Complementary, and more!',
+                highlight: '#generateBtn'
+            },
+            {
+                title: '📤 Extract from Images',
+                content: 'Switch to the "Extract from Image" tab to upload any image and automatically extract its dominant colors.',
+                highlight: '[data-tab="image"]'
+            },
+            {
+                title: '🔍 Contrast Checker',
+                content: 'Use the Contrast Checker tab to ensure your color combinations meet WCAG accessibility standards for readability.',
+                highlight: '[data-tab="contrast"]'
+            },
+            {
+                title: '💾 Save & Share',
+                content: 'Save your favorite palettes locally, export them as CSS/JSON, or share them with others using the action buttons.',
+                highlight: '.palette-actions'
+            },
+            {
+                title: '🌙 Dark Mode',
+                content: 'Toggle between light and dark themes using the moon/sun button in the top-right corner.',
+                highlight: '#themeToggle'
+            },
+            {
+                title: '⌨️ Keyboard Shortcuts',
+                content: 'Press Ctrl+S to save, Ctrl+R to generate, and Ctrl+? anytime to see this tutorial again!',
+                highlight: null
+            }
+        ];
+        
+        let currentTourStep = 0;
+        let tourOverlay = null;
+        
+        function showTourStep() {
+            if (currentTourStep >= tourSteps.length) {
+                closeTour();
+                localStorage.setItem('color-palette-tutorial', 'completed');
+                return;
+            }
+            
+            const step = tourSteps[currentTourStep];
+            
+            if (tourOverlay) {
+                tourOverlay.remove();
+            }
+            
+            tourOverlay = document.createElement('div');
+            tourOverlay.className = 'tour-overlay';
+            
+            const dots = tourSteps.map((_, i) => 
+                `<div class="tour-dot ${i === currentTourStep ? 'active' : ''}"></div>`
+            ).join('');
+            
+            tourOverlay.innerHTML = `
+                <div class="tour-popup">
+                    <h3>${step.title}</h3>
+                    <p>${step.content}</p>
+                    <div class="tour-progress">${dots}</div>
+                    <div class="tour-buttons">
+                        ${currentTourStep > 0 ? `<button class="tour-btn tour-btn-secondary" id="tourPrev">← Back</button>` : '<div></div>'}
+                        <button class="tour-btn tour-btn-primary" id="tourNext">${currentTourStep === tourSteps.length - 1 ? 'Finish ✨' : 'Next →'}</button>
+                    </div>
+                    <button class="tour-btn tour-btn-secondary" id="tourSkip" style="margin-top: 10px; width: 100%;">Skip Tutorial</button>
+                </div>
+            `;
+            
+            document.body.appendChild(tourOverlay);
+            
+            // Highlight element if specified
+            if (step.highlight) {
+                const element = document.querySelector(step.highlight);
+                if (element) {
+                    element.style.position = 'relative';
+                    element.style.zIndex = '10001';
+                    element.classList.add('tour-highlight');
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+            
+            // Event listeners
+            document.getElementById('tourNext').addEventListener('click', () => {
+                removeHighlights();
+                currentTourStep++;
+                showTourStep();
+            });
+            
+            const prevBtn = document.getElementById('tourPrev');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    removeHighlights();
+                    currentTourStep--;
+                    showTourStep();
+                });
+            }
+            
+            document.getElementById('tourSkip').addEventListener('click', () => {
+                closeTour();
+                localStorage.setItem('color-palette-tutorial', 'completed');
+            });
+        }
+        
+        function removeHighlights() {
+            document.querySelectorAll('.tour-highlight').forEach(el => {
+                el.style.zIndex = '';
+                el.classList.remove('tour-highlight');
+            });
+        }
+        
+        function closeTour() {
+            removeHighlights();
+            if (tourOverlay) {
+                tourOverlay.remove();
+                tourOverlay = null;
+            }
+            currentTourStep = 0;
+        }
+        
+        function startTutorial() {
+            currentTourStep = 0;
+            showTourStep();
+        }
+        
+        // Show tutorial on first visit
+        if (!localStorage.getItem('color-palette-tutorial')) {
+            setTimeout(startTutorial, 1000);
+        }
+        
+        // Help button
+        document.getElementById('helpBtn').addEventListener('click', startTutorial);
     </script>
 </body>
 </html>
-<script>
-// Simple tutorial
-const tutorialSteps = [
-    { selector: 'h1', text: 'Welcome! This is the main title.' },
-    { selector: 'button', text: 'Click here to perform actions.' }
-];
-let currentStep = 0;
-function showTutorial() {
-    if (currentStep < tutorialSteps.length) {
-        const step = tutorialSteps[currentStep];
-        const el = document.querySelector(step.selector);
-        if (el) {
-            const tooltip = document.createElement('div');
-            tooltip.textContent = step.text;
-            tooltip.style.cssText = 'position:absolute;background:#6f42c1;color:white;padding:10px;border-radius:5px;z-index:1000;';
-            el.style.position = 'relative';
-            el.appendChild(tooltip);
-            setTimeout(() => tooltip.remove(), 3000);
-        }
-        currentStep++;
-    }
-}
-// Show tutorial on first visit
-if (!localStorage.getItem('tutorial-shown')) {
-    setTimeout(showTutorial, 1000);
-    localStorage.setItem('tutorial-shown', 'true');
-}
-</script>
-<script>
-// Simple tutorial
-const tutorialSteps = [
-    { selector: 'h1', text: 'Welcome! This is the main title.' },
-    { selector: 'button', text: 'Click here to perform actions.' }
-];
-let currentStep = 0;
-function showTutorial() {
-    if (currentStep < tutorialSteps.length) {
-        const step = tutorialSteps[currentStep];
-        const el = document.querySelector(step.selector);
-        if (el) {
-            const tooltip = document.createElement('div');
-            tooltip.textContent = step.text;
-            tooltip.style.cssText = 'position:absolute;background:#6f42c1;color:white;padding:10px;border-radius:5px;z-index:1000;';
-            el.style.position = 'relative';
-            el.appendChild(tooltip);
-            setTimeout(() => tooltip.remove(), 3000);
-        }
-        currentStep++;
-    }
-}
-// Show tutorial on first visit
-if (!localStorage.getItem('tutorial-shown')) {
-    setTimeout(showTutorial, 1000);
-    localStorage.setItem('tutorial-shown', 'true');
-}
-</script>
-<script>
-// Simple tutorial
-const tutorialSteps = [
-    { selector: 'h1', text: 'Welcome! This is the main title.' },
-    { selector: 'button', text: 'Click here to perform actions.' }
-];
-let currentStep = 0;
-function showTutorial() {
-    if (currentStep < tutorialSteps.length) {
-        const step = tutorialSteps[currentStep];
-        const el = document.querySelector(step.selector);
-        if (el) {
-            const tooltip = document.createElement('div');
-            tooltip.textContent = step.text;
-            tooltip.style.cssText = 'position:absolute;background:#6f42c1;color:white;padding:10px;border-radius:5px;z-index:1000;';
-            el.style.position = 'relative';
-            el.appendChild(tooltip);
-            setTimeout(() => tooltip.remove(), 3000);
-        }
-        currentStep++;
-    }
-}
-// Show tutorial on first visit
-if (!localStorage.getItem('tutorial-shown')) {
-    setTimeout(showTutorial, 1000);
-    localStorage.setItem('tutorial-shown', 'true');
-}
-</script>
