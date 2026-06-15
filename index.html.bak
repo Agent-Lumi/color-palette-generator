@@ -18,6 +18,7 @@
         <div class="tabs">
             <button class="tab-btn active" data-tab="random">Random Palette</button>
             <button class="tab-btn" data-tab="image">Extract from Image</button>
+            <button class="tab-btn" data-tab="contrast">Contrast Checker</button>
         </div>
         
         <div id="random-tab" class="tab-content active">
@@ -56,10 +57,67 @@
             </div>
         </div>
         
+        <div id="contrast-tab" class="tab-content">
+            <div class="contrast-checker">
+                <h3>🔍 WCAG Contrast Checker</h3>
+                <p class="contrast-desc">Check if your colors meet accessibility standards. Select two colors from your palette to compare.</p>
+                
+                <div class="contrast-colors">
+                    <div class="contrast-color-picker">
+                        <label>Foreground (Text)</label>
+                        <div class="color-input-row">
+                            <input type="color" id="contrastFgPicker" value="#ffffff">
+                            <input type="text" id="contrastFgHex" value="#ffffff" maxlength="7" placeholder="#ffffff">
+                        </div>
+                    </div>
+                    <div class="contrast-swap" id="contrastSwap" title="Swap colors">⇄</div>
+                    <div class="contrast-color-picker">
+                        <label>Background</label>
+                        <div class="color-input-row">
+                            <input type="color" id="contrastBgPicker" value="#000000">
+                            <input type="text" id="contrastBgHex" value="#000000" maxlength="7" placeholder="#000000">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contrast-preview" id="contrastPreview">
+                    <span class="preview-text" id="previewText">Sample Text</span>
+                </div>
+                
+                <div class="contrast-results" id="contrastResults">
+                    <div class="contrast-ratio">
+                        <span class="ratio-label">Contrast Ratio</span>
+                        <span class="ratio-value" id="ratioValue">21:1</span>
+                    </div>
+                    <div class="wcag-levels">
+                        <div class="wcag-level pass" id="wcagAA">
+                            <span class="level-name">AA</span>
+                            <span class="level-status">✓ Pass</span>
+                        </div>
+                        <div class="wcag-level pass" id="wcagAAA">
+                            <span class="level-name">AAA</span>
+                            <span class="level-status">✓ Pass</span>
+                        </div>
+                        <div class="wcag-level pass" id="wcagAALarge">
+                            <span class="level-name">AA Large</span>
+                            <span class="level-status">✓ Pass</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="palette-quick-select">
+                    <p>Quick select from current palette:</p>
+                    <div class="quick-colors" id="quickColors"></div>
+                </div>
+            </div>
+        </div>
+        
         <div class="palette-actions">
+            <button id="undoBtn" class="btn btn-secondary" title="Undo (Ctrl+Z)">↩️ Undo</button>
             <button id="saveBtn" class="btn btn-secondary">💾 Save Palette</button>
-            <button id="exportBtn" class="btn btn-secondary">📋 Export CSS</button>
+            <button id="exportBtn" class="btn btn-secondary">📋 Export</button>
             <button id="shareBtn" class="btn btn-secondary">🔗 Share</button>
+            <button id="redoBtn" class="btn btn-secondary" title="Redo (Ctrl+Shift+Z)">Redo ↪️</button>
         </div>
         
         <div class="saved-palettes" id="savedPalettes">
@@ -147,3 +205,31 @@
     </script>
 </body>
 </html>
+<script>
+// Simple tutorial
+const tutorialSteps = [
+    { selector: 'h1', text: 'Welcome! This is the main title.' },
+    { selector: 'button', text: 'Click here to perform actions.' }
+];
+let currentStep = 0;
+function showTutorial() {
+    if (currentStep < tutorialSteps.length) {
+        const step = tutorialSteps[currentStep];
+        const el = document.querySelector(step.selector);
+        if (el) {
+            const tooltip = document.createElement('div');
+            tooltip.textContent = step.text;
+            tooltip.style.cssText = 'position:absolute;background:#6f42c1;color:white;padding:10px;border-radius:5px;z-index:1000;';
+            el.style.position = 'relative';
+            el.appendChild(tooltip);
+            setTimeout(() => tooltip.remove(), 3000);
+        }
+        currentStep++;
+    }
+}
+// Show tutorial on first visit
+if (!localStorage.getItem('tutorial-shown')) {
+    setTimeout(showTutorial, 1000);
+    localStorage.setItem('tutorial-shown', 'true');
+}
+</script>
