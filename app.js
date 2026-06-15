@@ -24,7 +24,118 @@ class ColorPaletteGenerator {
         this.historyIndex = -1;
         this.maxHistory = 20;
         
+        // Color Name Database for the new feature
+        this.colorNames = this.initColorNames();
+        
         this.init();
+    }
+    
+    // 🎨 NEW FEATURE: Color Name Identifier - Returns human-readable color names
+    initColorNames() {
+        return {
+            // Reds
+            '#800000': 'Maroon', '#8b0000': 'Dark Red', '#b22222': 'Firebrick',
+            '#cd5c5c': 'Indian Red', '#f08080': 'Light Coral', '#fa8072': 'Salmon',
+            '#e9967a': 'Dark Salmon', '#ffa07a': 'Light Salmon', '#dc143c': 'Crimson',
+            '#ff0000': 'Red', '#ff4500': 'Orange Red', '#ff6347': 'Tomato',
+            '#ff7f50': 'Coral', '#ff69b4': 'Hot Pink', '#ff1493': 'Deep Pink',
+            '#c71585': 'Medium Violet Red', '#db7093': 'Pale Violet Red',
+            
+            // Pinks & Purples
+            '#ff00ff': 'Magenta', '#ee82ee': 'Violet', '#dda0dd': 'Plum',
+            '#da70d6': 'Orchid', '#ba55d3': 'Medium Orchid', '#9932cc': 'Dark Orchid',
+            '#9400d3': 'Dark Violet', '#8b008b': 'Dark Magenta', '#800080': 'Purple',
+            '#4b0082': 'Indigo', '#483d8b': 'Dark Slate Blue', '#6a5acd': 'Slate Blue',
+            '#7b68ee': 'Medium Slate Blue', '#9370db': 'Medium Purple',
+            '#e6e6fa': 'Lavender', '#d8bfd8': 'Thistle', '#f0f8ff': 'Alice Blue',
+            
+            // Blues
+            '#00008b': 'Dark Blue', '#0000cd': 'Medium Blue', '#0000ff': 'Blue',
+            '#4169e1': 'Royal Blue', '#1e90ff': 'Dodger Blue', '#00bfff': 'Deep Sky Blue',
+            '#87ceeb': 'Sky Blue', '#87cefa': 'Light Sky Blue', '#4682b4': 'Steel Blue',
+            '#b0c4de': 'Light Steel Blue', '#add8e6': 'Light Blue', '#b0e0e6': 'Powder Blue',
+            '#afeeee': 'Pale Turquoise', '#00ced1': 'Dark Turquoise',
+            '#48d1cc': 'Medium Turquoise', '#40e0d0': 'Turquoise', '#00ffff': 'Cyan',
+            '#5f9ea0': 'Cadet Blue', '#008b8b': 'Dark Cyan', '#008080': 'Teal',
+            '#20b2aa': 'Light Sea Green', '#66cdaa': 'Medium Aquamarine',
+            
+            // Greens
+            '#00fa9a': 'Medium Spring Green', '#00ff7f': 'Spring Green',
+            '#98fb98': 'Pale Green', '#90ee90': 'Light Green', '#8fbc8f': 'Dark Sea Green',
+            '#3cb371': 'Medium Sea Green', '#2e8b57': 'Sea Green', '#006400': 'Dark Green',
+            '#228b22': 'Forest Green', '#008000': 'Green', '#32cd32': 'Lime Green',
+            '#00ff00': 'Lime', '#7cfc00': 'Lawn Green', '#7fff00': 'Chartreuse',
+            '#adff2f': 'Green Yellow', '#9acd32': 'Yellow Green',
+            '#6b8e23': 'Olive Drab', '#556b2f': 'Dark Olive Green', '#808000': 'Olive',
+            
+            // Yellows & Oranges
+            '#bdb76b': 'Dark Khaki', '#f0e68c': 'Khaki', '#eee8aa': 'Pale Goldenrod',
+            '#fafad2': 'Light Goldenrod Yellow', '#ffffe0': 'Light Yellow',
+            '#ffff00': 'Yellow', '#ffd700': 'Gold', '#fffacd': 'Lemon Chiffon',
+            '#f5f5dc': 'Beige', '#ffe4c4': 'Bisque', '#ffebcd': 'Blanched Almond',
+            '#ffdab9': 'Peach Puff', '#ffdead': 'Navajo White', '#ffe4b5': 'Moccasin',
+            '#ffa500': 'Orange', '#ff8c00': 'Dark Orange', '#ff7f00': 'Dark Orange',
+            '#f4a460': 'Sandy Brown', '#daa520': 'Goldenrod', '#b8860b': 'Dark Goldenrod',
+            '#cd853f': 'Peru', '#d2691e': 'Chocolate', '#8b4513': 'Saddle Brown',
+            '#a0522d': 'Sienna', '#bc8f8f': 'Rosy Brown', '#deb887': 'Burlywood',
+            '#f5deb3': 'Wheat', '#fff8dc': 'Cornsilk',
+            
+            // Browns & Grays
+            '#fff5ee': 'Seashell', '#a0522d': 'Sienna', '#c0c0c0': 'Silver',
+            '#808080': 'Gray', '#696969': 'Dim Gray', '#778899': 'Light Slate Gray',
+            '#708090': 'Slate Gray', '#2f4f4f': 'Dark Slate Gray', '#000000': 'Black',
+            '#ffffff': 'White', '#fffafa': 'Snow', '#f8f8ff': 'Ghost White',
+            '#f0f8ff': 'Alice Blue', '#f5f5f5': 'White Smoke', '#dcdcdc': 'Gainsboro',
+            '#d3d3d3': 'Light Gray', '#a9a9a9': 'Dark Gray', '#c0c0c0': 'Silver',
+            '#d2691e': 'Chocolate', '#8b4513': 'Saddle Brown', '#800000': 'Maroon',
+            '#8b0000': 'Dark Red', '#a52a2a': 'Brown', '#cd853f': 'Peru',
+            '#deb887': 'Burlywood', '#d2b48c': 'Tan', '#f4a460': 'Sandy Brown'
+        };
+    }
+    
+    // 🎨 NEW FEATURE: Get the closest named color for any hex code
+    getColorName(hex) {
+        hex = hex.toLowerCase();
+        
+        // Check exact match first
+        if (this.colorNames[hex]) {
+            return this.colorNames[hex];
+        }
+        
+        // Find closest named color by RGB distance
+        const rgb = this.hexToRgb(hex);
+        let closestName = 'Unknown';
+        let minDistance = Infinity;
+        
+        for (const [namedHex, name] of Object.entries(this.colorNames)) {
+            const namedRgb = this.hexToRgb(namedHex);
+            const distance = Math.sqrt(
+                Math.pow(rgb.r - namedRgb.r, 2) +
+                Math.pow(rgb.g - namedRgb.g, 2) +
+                Math.pow(rgb.b - namedRgb.b, 2)
+            );
+            
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestName = name;
+            }
+        }
+        
+        // Only return close name if it's reasonably similar (within 50 units)
+        if (minDistance < 50) {
+            return `${closestName}`;
+        }
+        
+        return 'Custom';
+    }
+    
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
     }
     
     init() {
@@ -277,17 +388,29 @@ class ColorPaletteGenerator {
     
     renderPalette(container, colors) {
         container.innerHTML = '';
-        colors.forEach(color => {
+        colors.forEach((color, index) => {
             const colorDiv = document.createElement('div');
             colorDiv.className = 'palette-color';
             colorDiv.style.backgroundColor = color;
+            
+            // 🎨 NEW FEATURE: Get color name
+            const colorName = this.getColorName(color);
+            
             colorDiv.innerHTML = `
                 <div class="color-info">
-                    <div>${color.toUpperCase()}</div>
+                    <div class="color-hex">${color.toUpperCase()}</div>
+                    <div class="color-name">${colorName}</div>
                     <div>Click to copy</div>
                 </div>
             `;
             colorDiv.addEventListener('click', () => this.copyColor(color));
+            
+            // 🎨 NEW FEATURE: Add color name badge
+            const nameBadge = document.createElement('span');
+            nameBadge.className = 'color-name-badge';
+            nameBadge.textContent = colorName;
+            colorDiv.appendChild(nameBadge);
+            
             container.appendChild(colorDiv);
         });
     }

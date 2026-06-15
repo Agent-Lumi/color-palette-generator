@@ -251,9 +251,41 @@ input[type="range"]::-webkit-slider-thumb {
     font-size: 0.8rem;
     opacity: 0;
     transition: opacity 0.3s ease;
+    text-align: center;
 }
 
-.palette-color:hover .color-info {
+.color-hex {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.color-name {
+    color: #ff6b6b;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+/* 🎨 NEW FEATURE: Color Name Badge */
+.color-name-badge {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.palette-color:hover .color-name-badge {
     opacity: 1;
 }
 
